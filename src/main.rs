@@ -60,7 +60,7 @@ fn main() {
 
     let message_out_jita = message_out.clone();
     let socket_send_tx_jita = socket_send_tx.clone();
-    let jita_re = Regex::new(r"$jita +([^ ]+)( all)?").unwrap();
+    let jita_re = Regex::new(r"^jita +([^ ]+)( all)?").unwrap();
     let jita_loop = thread::spawn(move || {
         // jita模块
         loop {
