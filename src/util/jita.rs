@@ -6,8 +6,6 @@ use std::collections::HashMap;
 use std::thread;
 use std::time::Duration;
 
-
-
 pub fn update_db(all_page: u64) -> HashMap<String, u64> {
     let (hashmap_tx, hashmap_rx) = bounded(40);
 
@@ -105,13 +103,13 @@ pub fn get_name(all_item_dic: &HashMap<String, u64>, name: &str) -> Vec<(String,
 
     let mut c = vec![];
 
-    let mut num = 0;
+    // let mut num = 0;
 
     for target_name in b.iter() {
-        if num > 10 || target_name.1 < 20 {
+        if target_name.1 < 20 {
             break;
         } else {
-            num += 1;
+            // num += 1;
             c.push((target_name.0.to_owned(), all_item_dic[&target_name.0]));
         }
         println!("{} {}", target_name.0, target_name.1);
@@ -119,25 +117,28 @@ pub fn get_name(all_item_dic: &HashMap<String, u64>, name: &str) -> Vec<(String,
     c
 }
 
-
 pub fn get_price(item_vec: Vec<(String, u64)>) -> Vec<(String, (f64, f64))> {
     let client = reqwest::blocking::Client::new();
     let mut return_vec = vec![];
+    let mut num = 0;
     for item in item_vec.into_iter() {
-        let url = format!(
-            "https://www.ceve-market.org/api/market/region/10000002/type/{}.json",
-            item.1
-        );
-
-        let res = client.get(url).send().unwrap().text().unwrap();
-        let v: Value = serde_json::from_str(&res).unwrap();
-        return_vec.push((
-            item.0,
-            (
-                v["sell"]["min"].as_f64().unwrap(),
-                v["buy"]["max"].as_f64().unwrap(),
-            ),
-        ))
+        if num > 10 {
+            break;
+        } else {
+            let url = format!(
+                "https://www.ceve-market.org/api/market/region/10000002/type/{}.json",
+                item.1
+            );
+            let res = client.get(url).send().unwrap().text().unwrap();
+            let v: Value = serde_json::from_str(&res).unwrap();
+            let sell = v["sell"]["min"].as_f64().unwrap();
+            let buy = v["buy"]["max"].as_f64().unwrap();
+            if sell == 0.0 {
+                continue;
+            }
+            return_vec.push((item.0, (sell, buy)));
+            num += 1;
+        }
     }
     return_vec
 }
