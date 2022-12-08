@@ -15,10 +15,10 @@ panic = "abort"
 
 [dependencies]
 url = {version="2.2.1"}
-websocket={version=""}
-serde_json = ""
-crossbeam =""
+websocket={version="0.26.5"}
+serde_json = "1.0.85"
+crossbeam ="0.8.2"
 reqwest = { version = "0.11", features = ["blocking", "json"] }
-num-format = ""
+num-format = "0.4.0"
 regex = "1"
 strsim = "0.10.0"
