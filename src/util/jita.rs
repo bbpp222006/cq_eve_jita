@@ -151,6 +151,8 @@ pub fn get_price(item_vec: Vec<(String, u64, u64)>) -> Vec<(String, (f64, f64, u
         if num > 10 || score<60 ||try_num>30{
             break;
         } else {
+            // 如果id=29668,将其改为44992
+            let id = if id == 29668 { 44992 } else { id };
             let url = format!(
                 "https://www.ceve-market.org/api/market/region/10000002/type/{}.json",
                 id
