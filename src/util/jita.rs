@@ -224,6 +224,9 @@ pub fn filter_price(price_vec: Vec<(String, (f64, f64, u64))>) -> Vec<(String, (
         
         current_score=score;
         return_vec.push((item_name, (sell, buy, score)));
+        if current_score> 98{
+            break
+        }
         
     }
     
