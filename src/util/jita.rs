@@ -3,6 +3,7 @@ extern crate strsim;
 use crossbeam::channel::{bounded, select, Receiver, Sender};
 use num_format::{Locale, ToFormattedString};
 use regex::Regex;
+use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::thread;
@@ -36,26 +37,49 @@ pub fn update_db(all_page: u64) -> HashMap<String, u64> {
     db_hash
 }
 
+
+// serde解析json
+#[derive(Deserialize, Debug)]
+struct Item {
+    id: u64,
+    name: String,
+    category: String,
+}
+
 fn id_to_name(id_vec: Vec<u64>) -> HashMap<String, u64> {
     let client = reqwest::blocking::Client::new();
-    let res = client
-        .post("https://ali-esi.evepc.163.com/latest/universe/names/?datasource=serenity")
-        .json(&id_vec)
-        .send()
-        .unwrap()
-        .text()
-        .unwrap();
 
-    let v: Value = serde_json::from_str(&res).unwrap();
+    fn send_batch_request(batch: &[u64]) -> Vec<Item> {
+        let client = reqwest::blocking::Client::new(); // 创建同步的Reqwest客户端
+        let url = "https://ali-esi.evepc.163.com/latest/universe/names/?datasource=serenity";
+    
+        let res = client
+            .post(url)
+            .json(batch)
+            .send()
+            .unwrap()
+            .text()
+            .unwrap();
+    
+        // 将结果解析成您需要的数据结构，这里假设是String
+        let parsed_result: Vec<Item> = serde_json::from_str(&res).unwrap();
+        parsed_result
+    }
+    // 对id_vec 每100个分次请求，再合并为res
+    let batch_size = 100; // 设置每个批次的大小
+    let mut combined_result = Vec::new();
+    for batch in id_vec.chunks(batch_size) {
+        let res = send_batch_request(batch);
+        combined_result.extend(res);
+    }
 
-    let aval_vac: HashMap<String, u64> = v
-        .as_array()
-        .unwrap()
+
+    let aval_vac: HashMap<String, u64> = combined_result
         .into_iter()
         .map(|value| {
             (
-                value["name"].as_str().unwrap().to_string(),
-                value["id"].as_u64().unwrap(),
+                value.name,
+                value.id
             )
         })
         .collect();
