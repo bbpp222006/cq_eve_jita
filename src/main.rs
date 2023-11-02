@@ -38,7 +38,7 @@ fn main() {
             select! {
                 recv(update_sig_rx) -> _ =>{
                     println!("收到更新信号，将进行数据库更新");
-                    db_hash =util::update_db(45);
+                    db_hash =util::update_db(49);
 
                 },
                 recv(item_search_db_rx) -> item =>{
