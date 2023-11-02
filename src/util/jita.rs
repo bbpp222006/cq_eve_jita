@@ -69,6 +69,7 @@ fn id_to_name(id_vec: Vec<u64>) -> HashMap<String, u64> {
     let batch_size = 100; // 设置每个批次的大小
     let mut combined_result = Vec::new();
     for batch in id_vec.chunks(batch_size) {
+        println!("id_name请求完成");
         let res = send_batch_request(batch);
         combined_result.extend(res);
     }
