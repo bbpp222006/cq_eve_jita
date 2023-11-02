@@ -39,7 +39,7 @@ pub fn update_db(all_page: u64) -> HashMap<String, u64> {
 fn id_to_name(id_vec: Vec<u64>) -> HashMap<String, u64> {
     let client = reqwest::blocking::Client::new();
     let res = client
-        .post("https://esi.evepc.163.com/latest/universe/names/?datasource=serenity")
+        .post("https://ali-esi.evepc.163.com/latest/universe/names/?datasource=serenity")
         .json(&id_vec)
         .send()
         .unwrap()
@@ -66,7 +66,7 @@ fn id_to_name(id_vec: Vec<u64>) -> HashMap<String, u64> {
 fn get_type_page(page: u64) -> Vec<u64> {
     let client = reqwest::blocking::Client::new();
     let url = format!(
-        "https://esi.evepc.163.com/latest/universe/types/?datasource=serenity&page={}",
+        "https://ali-esi.evepc.163.com/latest/universe/types/?datasource=serenity&page={}",
         page
     );
     let res = client.get(url).send().unwrap().text().unwrap();
