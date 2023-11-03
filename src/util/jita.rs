@@ -66,10 +66,10 @@ fn id_to_name(id_vec: Vec<u64>) -> HashMap<String, u64> {
         parsed_result
     }
     // 对id_vec 每100个分次请求，再合并为res
-    let batch_size = 100; // 设置每个批次的大小
+    let batch_size = 1000; // 设置每个批次的大小
     let mut combined_result = Vec::new();
     for batch in id_vec.chunks(batch_size) {
-        println!("id_name请求完成");
+        // println!("id_name请求完成");
         let res = send_batch_request(batch);
         combined_result.extend(res);
     }
@@ -105,6 +105,16 @@ fn get_type_page(page: u64) -> Vec<u64> {
         .map(|a| a.as_u64().unwrap())
         .collect();
     return_vec
+}
+
+
+# [test]
+fn test_get_type_page() {
+    let db_hash =update_db(49);
+    let name="三钛合金";
+    let names = get_name(&db_hash, name);
+    let price = get_price(names);
+    println!("{:?}",price);
 }
 
 fn get_score(dic_name: &str, search_name: &str) -> u64 {
