@@ -53,13 +53,18 @@ fn id_to_name(id_vec: Vec<u64>) -> HashMap<String, u64> {
         let client = reqwest::blocking::Client::new(); // 创建同步的Reqwest客户端
         let url = "https://ali-esi.evepc.163.com/latest/universe/names/?datasource=serenity";
     
-        let res = client
-            .post(url)
-            .json(batch)
-            .send()
-            .unwrap()
-            .text()
-            .unwrap();
+        let res = {
+            for _ in 0..3 {
+                
+            }
+        }
+        // client
+        //     .post(url)
+        //     .json(batch)
+        //     .send()
+        //     .unwrap()
+        //     .text()
+        //     .unwrap();
     
         // 将结果解析成您需要的数据结构，这里假设是String
         let parsed_result: Vec<Item> = serde_json::from_str(&res).unwrap();
