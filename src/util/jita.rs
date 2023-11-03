@@ -37,7 +37,6 @@ pub fn update_db(all_page: u64) -> HashMap<String, u64> {
     db_hash
 }
 
-
 // serde解析json
 #[derive(Deserialize, Debug)]
 struct Item {
@@ -52,20 +51,24 @@ fn id_to_name(id_vec: Vec<u64>) -> HashMap<String, u64> {
     fn send_batch_request(batch: &[u64]) -> Vec<Item> {
         let client = reqwest::blocking::Client::new(); // 创建同步的Reqwest客户端
         let url = "https://ali-esi.evepc.163.com/latest/universe/names/?datasource=serenity";
-    
-        let res = {
-            for _ in 0..3 {
-                
+
+
+        let mut res = String::new();
+        for _ in 0..10 {
+            match client.post(url).json(batch).send() {
+                Ok(res_) => {
+                    res = res_.text().unwrap();
+                    break;
+                }
+                Err(_) => {
+                    println!("请求失败，重试");
+                    thread::sleep(Duration::from_secs_f32(1.0));
+                }                   
             }
         }
-        // client
-        //     .post(url)
-        //     .json(batch)
-        //     .send()
-        //     .unwrap()
-        //     .text()
-        //     .unwrap();
-    
+
+        // let res = client.post(url).json(batch).send().unwrap().text().unwrap();
+
         // 将结果解析成您需要的数据结构，这里假设是String
         let parsed_result: Vec<Item> = serde_json::from_str(&res).unwrap();
         parsed_result
@@ -79,15 +82,9 @@ fn id_to_name(id_vec: Vec<u64>) -> HashMap<String, u64> {
         combined_result.extend(res);
     }
 
-
     let aval_vac: HashMap<String, u64> = combined_result
         .into_iter()
-        .map(|value| {
-            (
-                value.name,
-                value.id
-            )
-        })
+        .map(|value| (value.name, value.id))
         .collect();
 
     aval_vac
@@ -99,7 +96,21 @@ fn get_type_page(page: u64) -> Vec<u64> {
         "https://ali-esi.evepc.163.com/latest/universe/types/?datasource=serenity&page={}",
         page
     );
-    let res = client.get(url).send().unwrap().text().unwrap();
+
+    let mut res = String::new();
+    for _ in 0..10 {
+        match client.get(url.clone()).send() {
+            Ok(res_) => {
+                res = res_.text().unwrap();
+                break;
+            }
+            Err(_) => {
+                println!("请求失败，重试");
+                thread::sleep(Duration::from_secs_f32(1.0));
+            }                   
+        }
+    }
+    // let res = client.get(url).send().unwrap().text().unwrap();
 
     let v: Value = serde_json::from_str(&res).unwrap();
 
@@ -112,14 +123,13 @@ fn get_type_page(page: u64) -> Vec<u64> {
     return_vec
 }
 
-
-# [test]
+#[test]
 fn test_get_type_page() {
-    let db_hash =update_db(49);
-    let name="三钛合金";
+    let db_hash = update_db(49);
+    let name = "三钛合金";
     let names = get_name(&db_hash, name);
     let price = get_price(names);
-    println!("{:?}",price);
+    println!("{:?}", price);
 }
 
 fn get_score(dic_name: &str, search_name: &str) -> u64 {
@@ -180,15 +190,15 @@ pub fn get_name(all_item_dic: &HashMap<String, u64>, name: &str) -> Vec<(String,
     // // c.sort_by(|a, b| b.1.cmp(&a.1));
     // c
 }
-                               //名称  score  id            //名称   sell  buy  score
+//名称  score  id            //名称   sell  buy  score
 pub fn get_price(item_vec: Vec<(String, u64, u64)>) -> Vec<(String, (f64, f64, u64))> {
     let client = reqwest::blocking::Client::new();
     let mut return_vec = vec![];
     let mut num = 0;
     let mut try_num = 0;
-    for (item_name,score,id) in item_vec.into_iter() {
-        println!("{},{},{}",item_name,score,id);
-        if num > 10 || score<60 ||try_num>30{
+    for (item_name, score, id) in item_vec.into_iter() {
+        println!("{},{},{}", item_name, score, id);
+        if num > 10 || score < 60 || try_num > 30 {
             break;
         } else {
             // 如果id=29668,将其改为44992
@@ -197,7 +207,7 @@ pub fn get_price(item_vec: Vec<(String, u64, u64)>) -> Vec<(String, (f64, f64, u
                 "https://www.ceve-market.org/api/market/region/10000002/type/{}.json",
                 id
             );
-            try_num+=1;
+            try_num += 1;
             let res = client.get(url).send().unwrap().text().unwrap();
             let v: Value = serde_json::from_str(&res).unwrap();
             let sell = v["sell"]["min"].as_f64().unwrap();
@@ -216,14 +226,14 @@ pub fn pretty_str(price_vec: Vec<(String, (f64, f64, u64))>) -> Option<String> {
     let mut whole_sell = 0.0;
     let mut whole_buy = 0.0;
     if price_vec.len() == 0 {
-        return None
+        return None;
     }
 
     let mut return_str = String::from("名称：卖/买\n");
 
-    for (num,(item_name, (sell, buy, score))) in price_vec.into_iter().enumerate() {
-        if num>10{
-            break
+    for (num, (item_name, (sell, buy, score))) in price_vec.into_iter().enumerate() {
+        if num > 10 {
+            break;
         }
         whole_sell += sell;
         whole_buy += buy;
@@ -231,12 +241,11 @@ pub fn pretty_str(price_vec: Vec<(String, (f64, f64, u64))>) -> Option<String> {
         let mut buystr = buy.to_string();
         if sell > 1000.0 {
             sellstr = (sell as u64).to_formatted_string(&Locale::en);
-        } 
-        if buy > 1000.0{
+        }
+        if buy > 1000.0 {
             buystr = (buy as u64).to_formatted_string(&Locale::en);
         }
         return_str.push_str(&format!("{} {}/{}\n", item_name, sellstr, buystr));
-        
     }
     return_str.push_str(&format!(
         "统计： {}/{}",
@@ -253,19 +262,19 @@ pub fn filter_price(price_vec: Vec<(String, (f64, f64, u64))>) -> Vec<(String, (
     let mut current_score = price_vec.get(0).map_or(0, |a| a.1 .2);
     // let mut max_num = 0;
     for (item_name, (sell, buy, score)) in price_vec.into_iter() {
-        println!("{},{},{},{}",item_name,sell, buy, score);
+        println!("{},{},{},{}", item_name, sell, buy, score);
         let score_gap = current_score - score;
-        if score_gap> 9{
-            break
+        if score_gap > 9 {
+            break;
         }
-        if (tuzhuang_reg.is_match(&item_name) && score < 90)||(sell==0.0 && score < 70) {
+        if (tuzhuang_reg.is_match(&item_name) && score < 90) || (sell == 0.0 && score < 70) {
             continue;
         }
-        
-        current_score=score;
+
+        current_score = score;
         return_vec.push((item_name, (sell, buy, score)));
-        if current_score> 98{
-            break
+        if current_score > 98 {
+            break;
         }
     }
     return_vec
