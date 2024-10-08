@@ -125,7 +125,7 @@ fn get_type_page(page: u64) -> Vec<u64> {
 
 #[test]
 fn test_get_type_page() {
-    let db_hash = update_db(49);
+    let db_hash = update_db(51);
     let name = "三钛合金";
     let names = get_name(&db_hash, name);
     let price = get_price(names);

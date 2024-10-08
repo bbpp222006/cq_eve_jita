@@ -62,6 +62,7 @@ fn main() {
         loop {
             let raw_message = message_out_jita.recv().unwrap();
             let v: Value = serde_json::from_str(&raw_message).unwrap();
+            println!("{}", v);
 
             if let Some(v_) = jita_re.captures(v["message"].as_str().map_or("", |x| x)) {
                 let user_id = v["user_id"].as_u64().unwrap();
