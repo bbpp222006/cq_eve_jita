@@ -64,7 +64,7 @@ fn main() {
             let v: Value = serde_json::from_str(&raw_message).unwrap();
             println!("{}", v);
 
-            if let Some(v_) = jita_re.captures(v["message"].as_str().map_or("", |x| x)) {
+            if let Some(v_) = jita_re.captures(v["raw_message"].as_str().map_or("", |x| x)) {
                 let user_id = v["user_id"].as_u64().unwrap();
                 let group_id = v["group_id"].as_u64().unwrap();
 
